@@ -13,6 +13,7 @@
 	</head>
 	<body>
 		<script src='assets/js/leaflet-omnivore.min.js'></script>
+		<script src='assets/data/js/districts_data.js'>
 		<div id='map'></div>
 		<script>
 			L.mapbox.accessToken = 'pk.eyJ1IjoiZ2dnb2Rod2FuaSIsImEiOiJkR2NtblZzIn0.sEUOt3zaGxULWTHhC-JLIA'
@@ -20,7 +21,27 @@
 			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 					    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 					    }).addTo(map);
-			var usLayer = omnivore.topojson('assets/data/district_boundaries.json').addTo(map);
+			var districtLayer = omnivore.topojson('assets/data/json/district_boundaries.json', {style: getStyle}).addTo(map);
+			function getStyle(feature) {
+				return {
+					weight: 2,
+					opacity: 0.1,
+				       	color: 'black',
+					fillOpacity: 0.65,
+					fillColor: getColor(feature.properties.id)
+          			};
+  			}			      
+			function getColor(districtId) {
+				ratio = districtsData(districtId.toString())["t"]["rf"];
+				return ratio > 0.05 ? '#8c2d04' :
+				d > 0.025  ? '#cc4c02' :
+				d > 0.01  ? '#ec7014' :
+				d > 0.005  ? '#fe9929' :
+				d > 0.0025   ? '#fec44f' :
+				d > 0.001   ? '#fee391' :
+				d > 0.0005   ? '#fff7bc' :
+				'#ffffe5';
+			}	
 		</script>
 	</body>
 </html>		
