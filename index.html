@@ -13,34 +13,41 @@
 	</head>
 	<body>
 		<script src='assets/js/leaflet-omnivore.min.js'></script>
-		<script src='assets/data/js/districts_data.js'>
+		<script src='assets/data/js/districts_data.js'></script>
 		<div id='map'></div>
 		<script>
-			L.mapbox.accessToken = 'pk.eyJ1IjoiZ2dnb2Rod2FuaSIsImEiOiJkR2NtblZzIn0.sEUOt3zaGxULWTHhC-JLIA'
 			var map = L.mapbox.map('map').setView([22, 78], 5);
 			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 					    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 					    }).addTo(map);
-			var districtLayer = omnivore.topojson('assets/data/json/district_boundaries.json', {style: getStyle}).addTo(map);
+			var customLayer = L.geoJson(null, {style: getStyle});
+			var districtLayer = omnivore.topojson('assets/data/json/district_boundaries.json', null, customLayer).addTo(map);
 			function getStyle(feature) {
 				return {
-					weight: 2,
-					opacity: 0.1,
+					weight: 1,
+					opacity: 0.25,
 				       	color: 'black',
 					fillOpacity: 0.65,
 					fillColor: getColor(feature.properties.id)
           			};
   			}			      
 			function getColor(districtId) {
-				ratio = districtsData(districtId.toString())["t"]["rf"];
-				return ratio > 0.05 ? '#8c2d04' :
-				d > 0.025  ? '#cc4c02' :
-				d > 0.01  ? '#ec7014' :
-				d > 0.005  ? '#fe9929' :
-				d > 0.0025   ? '#fec44f' :
-				d > 0.001   ? '#fee391' :
-				d > 0.0005   ? '#fff7bc' :
-				'#ffffe5';
+				console.log(districtId);
+				if(!districtsData[districtId]){
+					ratio = 0;	
+				}
+				else{
+					ratio = (districtsData[districtId]["t"]["rf"] + districtsData[districtId]["t"]["rm"])/2.0;
+				}
+				return ratio > 0.05 ? '#000000' :
+				ratio > 0.04  ? '#660000' :
+				ratio > 0.03  ? '#FF6600' :
+				ratio > 0.02  ? '#99FF33' :
+				ratio > 0.01   ? '#19A319' :
+				ratio > 0.005   ? '#003D00' :
+				ratio > 0.0025   ? '#002900' :
+				ratio == 0 ? '#FFFFFF':
+				'#C2C2A3';
 			}	
 		</script>
 	</body>
