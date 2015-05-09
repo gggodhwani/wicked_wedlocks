@@ -2,53 +2,179 @@
 <html>
 	<head>
 		<meta charset=utf-8 />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<title>Data</title>
 		<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-		<script src='assets/js/mapbox.js'></script>
-		<link href='assets/css/mapbox.css' rel='stylesheet' />
-		<style>
-			body { margin:0; padding:0; }
-    			#map { position:absolute; top:0; bottom:0; width:100%; }
-		</style>
+		<script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js'></script>
+		<link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.css' rel='stylesheet' />
+		<link href='assets/css/bootstrap.min.css' rel='stylesheet' />
+		<link href="assets/css/style.css" rel="stylesheet" />
 	</head>
 	<body>
+		<!--
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#">Project name</a>
+				</div>
+				<div id="navbar" class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<li class="active"><a href="#">Home</a></li>
+						<li><a href="#about">About</a></li>
+						<li><a href="#contact">Contact</a></li>
+					</ul>
+				</div>
+			</div>
+		</nav>	
+		-->
+		<div class="container-fluid">
+			<div id='map'></div>
+			<div id="locality-panel">
+				<div class="heading btn-group-heading">Locality</div>
+				<div id='locality-type' class="btn-group" role="group" data-toggle="buttons-radio">
+					<button class="btn btn-default active" value="t">Total</button>
+					<button class="btn btn-default" value="r">Rural</button>
+					<button class="btn btn-default" value="u">Urban</button>
+				</div>
+			</div>
+			<div id="gender-panel">
+				<div class="heading btn-group-heading">Gender</div>
+				<div id='gender-type' class="btn-group" role="group" data-toggle="buttons-radio">
+					<button class="btn btn-default active" value="a">All</button>
+					<button class="btn btn-default" value="m">Boys</button>
+					<button class="btn btn-default" value="f">Girls</button>
+				</div>
+			</div>
+			<div id='datapanel'>
+				<div id="panel-heading" class="heading">District wise information on Child Marriages in India</div>
+				<div id="panel-data-table">
+					<div class='panel-dynamic'>
+						<div id='district-name' class="data-row"></div>
+						<div id='state-name' class="data-row"></div>
+					</div>
+					<div id='databox' class="data-row"></div>
+					<img src="assets/img/boy.png" height="56" width="30"/>
+					<img src="assets/img/girl.png" height="56" width="30"/>
+				</div>	
+			</div>
+		</div>
 		<script src='assets/js/leaflet-omnivore.min.js'></script>
+		<script src='assets/js/fuse.min.js'></script>
 		<script src='assets/data/js/districts_data.js'></script>
-		<div id='map'></div>
+		<script src='assets/js/jquery-2.1.4.min.js'></script>
 		<script>
-			var map = L.mapbox.map('map').setView([22, 78], 5);
-			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-					    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-					    }).addTo(map);
-			var customLayer = L.geoJson(null, {style: getStyle});
-			var districtLayer = omnivore.topojson('assets/data/json/district_boundaries.json', null, customLayer).addTo(map);
-			function getStyle(feature) {
+			var map = L.mapbox.map('map').setView([23, 85], 5);
+			var districtFeatureLayer = L.geoJson(null, {style: getDistrictStyle, onEachFeature: onEachFeature});
+			var boundaryFeatureLayer = L.geoJson(null, {style: getBoundaryStyle});
+			var districtLayer = omnivore.topojson('assets/data/json/district_boundaries.json', null, districtFeatureLayer)
+			districtLayer.addTo(map);
+			var boundaryLayer = omnivore.topojson('assets/data/json/boundary.json', null, boundaryFeatureLayer).addTo(map);
+			var popup = new L.Popup({autoPan: false});
+			var districtName = document.getElementById("district-name");
+			var stateName = document.getElementById("state-name");
+			var databox = document.getElementById("databox");
+			var colorMap = {'a': ['#3f007d', '#54278f', '#6a51a3', '#807dba', '#9e9ac8', '#bcbddc', '#dadaeb', '#efedf5', '#fcfbfd'], 'm': ['#08306b', '#08519c', '#2171b5', '#4292c6', '#6baed6', '#9ecae1', '#c6dbef', '#deebf7', '#f7fbff'], 'f': ['#7f0000', '#b30000', '#d7301f', '#ef6548', '#fc8d59', '#fdbb84', '#fdd49e', '#fee8c8', '#fff7ec']};
+			$("button").click(function () {
+				$(this).siblings(".active").toggleClass("active"); 
+				$(this).toggleClass("active");
+				districtLayer.eachLayer(function(layer){
+					layer.setStyle(getDistrictStyle(layer.feature));
+				});
+				databox.innerHTML = ""
+			});
+			function getDistrictStyle(feature) {
 				return {
 					weight: 1,
-					opacity: 0.25,
-				       	color: 'black',
-					fillOpacity: 0.65,
+					opacity: 0.6,
+				       	color: '#767676',
+					fillOpacity: 1,
 					fillColor: getColor(feature.properties.id)
           			};
   			}			      
-			function getColor(districtId) {
-				console.log(districtId);
+			function getBoundaryStyle(feature) {
+				return {
+					weight: 5,
+					opacity: 0.75,
+				       	color: 'white',
+          			};
+  			}	
+			function getDistrictScore(districtId)
+			{
+				localityType = $("#locality-type .active").attr("value")  
+				genderType = $("#gender-type .active").attr("value")  
 				if(!districtsData[districtId]){
-					ratio = 0;	
+					score = 0;	
 				}
 				else{
-					ratio = (districtsData[districtId]["t"]["rf"] + districtsData[districtId]["t"]["rm"])/2.0;
+					if(genderType == "a"){
+						score = (districtsData[districtId][localityType]["rf"] + districtsData[districtId][localityType]["rm"])/2.0;
+					}
+					else{
+						score = districtsData[districtId][localityType]["r" + genderType];  
+					}	
 				}
-				return ratio > 0.05 ? '#000000' :
-				ratio > 0.04  ? '#660000' :
-				ratio > 0.03  ? '#FF6600' :
-				ratio > 0.02  ? '#99FF33' :
-				ratio > 0.01   ? '#19A319' :
-				ratio > 0.005   ? '#003D00' :
-				ratio > 0.0025   ? '#002900' :
+				return score;
+			}
+			function getColor(districtId) {
+				genderType = $("#gender-type .active").attr("value")  
+				ratio = getDistrictScore(districtId);
+				colorPalette = colorMap[genderType];
+				return ratio >= 0.07 ? colorPalette[0] :
+				ratio >= 0.06 ? colorPalette[1] :
+				ratio >= 0.05 ? colorPalette[2] :
+				ratio >= 0.04  ? colorPalette[3] :
+				ratio >= 0.03  ? colorPalette[4] :
+				ratio >= 0.02  ? colorPalette[5] :
+				ratio >= 0.01   ? colorPalette[6] :
 				ratio == 0 ? '#FFFFFF':
-				'#C2C2A3';
-			}	
+				colorPalette[7];
+			}
+			function onEachFeature(feature, layer) {
+				layer.on({
+				mousemove: mousemove,
+				mouseout: mouseout,
+				click: zoomToFeature
+				});
+			}
+			var closeTooltip;
+			function mousemove(e) {
+				var layer = e.target;
+				popup.setLatLng(e.latlng);
+				districtId = layer.feature.properties.id; 
+				popup_data = Math.round(getDistrictScore(districtId) * 1000);
+				popup.setContent('<div class="marker-title">District: ' + layer.feature.properties.dn + '<div>State: ' + layer.feature.properties.sn +'</div></div>' + popup_data +  ' in 1000 underwent Child Marriage');
+				districtName.innerHTML = "<b>District: " + layer.feature.properties.dn + "</b>"; 
+				stateName.innerHTML = "State: " + layer.feature.properties.sn; 
+				databox.innerHTML = popup_data +  ' in 1000 underwent Child Marriage'; 
+				if (!popup._map) popup.openOn(map);
+				window.clearTimeout(closeTooltip);
+
+				// highlight feature
+				layer.setStyle({
+					weight: 3,
+					opacity: 0.8,
+				       	color: 'white',
+				});
+
+				if (!L.Browser.ie && !L.Browser.opera) {
+					layer.bringToFront();
+				}
+			}
+			function mouseout(e) {
+				districtLayer.resetStyle(e.target);
+				closeTooltip = window.setTimeout(function() {
+						map.closePopup();
+					}, 100);
+			}
+			function zoomToFeature(e) {
+				map.fitBounds(e.target.getBounds());
+			}
 		</script>
 	</body>
 </html>		
