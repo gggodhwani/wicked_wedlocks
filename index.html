@@ -51,18 +51,20 @@
 					<button class="btn btn-default" value="f">Girls</button>
 				</div>
 			</div>
-			<div id='datapanel'>
+			<div id='datapanel' class="panel panel-default">
 				<div id="panel-heading" class="heading">District wise information on Child Marriages in India</div>
-				<div id="panel-data-table">
-					<div class='panel-dynamic'>
-						<div id='district-name' class="data-row"></div>
-						<div id='state-name' class="data-row"></div>
-					</div>
-					<div id='databox' class="data-row"></div>
-					<img src="assets/img/boy.png" height="56" width="30"/>
-					<img src="assets/img/girl.png" height="56" width="30"/>
-				</div>	
-			</div>
+				<div class="panel-body">
+					<div id="panel-data-table">
+						<div class='panel-dynamic'>
+							<div id='district-name' class="data-row"></div>
+							<div id='state-name' class="data-row"></div>
+						</div>
+						<div id='databox' class="data-row"></div>
+						<img src="assets/img/boy.png" height="56" width="30"/>
+						<img src="assets/img/girl.png" height="56" width="30"/>
+					</div>	
+				</div>
+			</div>	
 		</div>
 		<script src='assets/js/leaflet-omnivore.min.js'></script>
 		<script src='assets/js/fuse.min.js'></script>
@@ -72,9 +74,9 @@
 			var map = L.mapbox.map('map').setView([23, 85], 5);
 			var districtFeatureLayer = L.geoJson(null, {style: getDistrictStyle, onEachFeature: onEachFeature});
 			var boundaryFeatureLayer = L.geoJson(null, {style: getBoundaryStyle});
+			var boundaryLayer = omnivore.topojson('assets/data/json/boundary.json', null, boundaryFeatureLayer).addTo(map);
 			var districtLayer = omnivore.topojson('assets/data/json/district_boundaries.json', null, districtFeatureLayer)
 			districtLayer.addTo(map);
-			var boundaryLayer = omnivore.topojson('assets/data/json/boundary.json', null, boundaryFeatureLayer).addTo(map);
 			var popup = new L.Popup({autoPan: false});
 			var districtName = document.getElementById("district-name");
 			var stateName = document.getElementById("state-name");
